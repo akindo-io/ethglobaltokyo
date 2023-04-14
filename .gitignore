@@ -1,0 +1,6 @@
+.env
+.contract.env
+node_modules
+.idea
+artifacts
+cache
