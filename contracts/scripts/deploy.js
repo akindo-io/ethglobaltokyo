@@ -1,11 +1,15 @@
 const {ethers} = require("hardhat");
 
-async function main(address) {
+async function main(address, pushCommAddress) {
     const Hackathon = await ethers.getContractFactory("HackathonContract");
     if (!address) {
         address = '0x07865c6e87b9f70255377e024ace6630c1eaa37f'; // goerli USDC
     }
-    const hackathon = await Hackathon.deploy([address]);
+    if (!pushCommAddress) {
+        pushCommAddress = '0xb3971BCef2D791bc4027BbfedFb47319A4AAaaAa';
+    }
+
+    const hackathon = await Hackathon.deploy([address], pushCommAddress);
 
     // コントラクトのデプロイ
     await hackathon.deployed();

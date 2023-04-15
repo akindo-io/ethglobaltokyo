@@ -6,6 +6,10 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./WhitelistedERC20.sol";
 
+interface IPUSHCommInterface {
+    function sendNotification(address _channel, address _recipient, bytes calldata _identity) external;
+}
+
 contract HackathonContract is Ownable, WhitelistedERC20 {
 
     using SafeERC20 for IERC20;
@@ -14,6 +18,7 @@ contract HackathonContract is Ownable, WhitelistedERC20 {
         address from;
         address erc20;
         address safeAddress;
+        address channelAddress;
         uint256 depositAmount;
         uint256 wavePrize;
         uint256 waveSubmitTime;
@@ -43,18 +48,22 @@ contract HackathonContract is Ownable, WhitelistedERC20 {
     string[] private hackathonIds;
     mapping(string => Hackathon) private _hackathons;
 
-    constructor(address[] memory erc20List) {
+    address public pushCommAddress;
+
+    constructor(address[] memory erc20List, address _pushCommAddress) {
         for (uint256 i; i < erc20List.length; i++) {
             addToWhitelist(erc20List[i]);
         }
+        pushCommAddress = _pushCommAddress;
     }
 
-    function open(address _erc20, address safeAddress, uint256 _wavePrize, uint256 _depositAmount, uint256 _waveSubmitTime, uint256 _waveVoteTime, string memory _hackathonId) external {
+    function open(address _erc20, address safeAddress, address _channelAddress, uint256 _wavePrize, uint256 _depositAmount, uint256 _waveSubmitTime, uint256 _waveVoteTime, string memory _hackathonId) external {
         Hackathon storage hackathon = _hackathons[_hackathonId];
         require(whitelisted(_erc20), "Token not whitelisted");
 
         hackathon.from = msg.sender;
         hackathon.safeAddress = safeAddress;
+        hackathon.channelAddress = _channelAddress;
         hackathon.depositAmount = _depositAmount;
         hackathon.erc20 = _erc20;
         hackathon.hackathonId = _hackathonId;
@@ -72,12 +81,10 @@ contract HackathonContract is Ownable, WhitelistedERC20 {
     function close(string memory _hackathonId, uint256[] memory _votes) external {
         Hackathon storage hackathon = _hackathons[_hackathonId];
         Wave storage wave = waves[_hackathonId][waveCount[_hackathonId] - 1];
-        require(hackathon.safeAddress == msg.sender);
         require(_isOpenedWave(_hackathonId));
         require(wave.submissionDeadline < block.timestamp);
-        require(_votes.length == wave.submitAddresses.length);
 
-        if (hackathon.safeAddress != msg.sender) {
+        if (hackathon.safeAddress != msg.sender || _votes.length != wave.submitAddresses.length) {
             return;
         }
         // transfer
@@ -108,6 +115,25 @@ contract HackathonContract is Ownable, WhitelistedERC20 {
             wave.votingDeadline = block.timestamp + _hackathons[_hackathonId].waveSubmitTime + _hackathons[_hackathonId].waveVoteTime;
             waves[_hackathonId].push(wave);
             waveCount[_hackathonId]++;
+        }
+        if (hackathon.channelAddress != address(0)) {
+            IPUSHCommInterface(pushCommAddress).sendNotification(
+                hackathon.channelAddress,
+                address(this),
+                bytes(
+                    string(
+                        abi.encodePacked(
+                            "0",
+                            "+",
+                            "1",
+                            "+",
+                            "WaveProtocol",
+                            "+",
+                            "The wave hackathon has begun !!!!"
+                        )
+                    )
+                )
+            );
         }
     }
 
