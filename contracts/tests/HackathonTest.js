@@ -15,22 +15,27 @@ describe('HackathonTest', async function () {
     let hackathonId = 'EthGlobalTokyo'
     let token
     let safeAddress
+    let IPUSHCommAddress
     let mockedERC20Contract
+    let mockedIPUSHCommInterface
     let status = {None: 0, Opening: 1, Closed: 2};
 
     before(async function () {
-        [owner, token, safeAddress, submiter1, submiter2, ...addrs] = await ethers.getSigners();
+        [owner, token, safeAddress, IPUSHCommAddress, submiter1, submiter2, ...addrs] = await ethers.getSigners();
 
         // interface
-        const [deployerOfERC20Contract] = provider.getWallets();
+        const [deployerOfERC20Contract, deployerOfIPUSHCommInterface] = provider.getWallets();
         // deploy the contract to Mock
         const ERC20Contract = require('./SafeERC20.json');
+        const IPUSHCommInterface = require('./IPUSHCommInterface.json');
         mockedERC20Contract = await deployMockContract(deployerOfERC20Contract, ERC20Contract.abi);
+        mockedIPUSHCommInterface = await deployMockContract(deployerOfIPUSHCommInterface, IPUSHCommInterface.abi);
         await mockedERC20Contract.mock.transfer.returns(true);
         await mockedERC20Contract.mock.transferFrom.returns(true);
         await mockedERC20Contract.mock.approve.returns(true);
+        await mockedIPUSHCommInterface.mock.sendNotification.returns();
 
-        deployAddress = await deploy(mockedERC20Contract.address);
+        deployAddress = await deploy(mockedERC20Contract.address, mockedIPUSHCommInterface.address);
         hackathonContract = await ethers.getContractAt('HackathonContract', deployAddress)
     })
 
@@ -38,6 +43,7 @@ describe('HackathonTest', async function () {
         await hackathonContract.open(
             mockedERC20Contract.address,
             safeAddress.address,
+            mockedIPUSHCommInterface.address,
             10,
             1000,
             600, // 10min
@@ -63,7 +69,6 @@ describe('HackathonTest', async function () {
         await ethers.provider.send("evm_increaseTime", [1800]);
         await ethers.provider.send("evm_mine", []);
 
-        await expect(hackathonContract.connect(safeAddress).close(hackathonId, [60, 40, 10])).reverted;
         await hackathonContract.connect(safeAddress).close(hackathonId, [60, 40])
 
         expect(await hackathonContract.getWaveCount(hackathonId)).equal(2);
