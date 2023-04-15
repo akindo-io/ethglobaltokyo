@@ -40,6 +40,7 @@ contract HackathonContract is Ownable, WhitelistedERC20 {
         Closed
     }
 
+    string[] private hackathonIds;
     mapping(string => Hackathon) private _hackathons;
 
     constructor(address[] memory erc20List) {
@@ -61,6 +62,7 @@ contract HackathonContract is Ownable, WhitelistedERC20 {
         hackathon.waveSubmitTime = _waveSubmitTime;
         hackathon.waveVoteTime = _waveVoteTime;
 
+        hackathonIds.push(_hackathonId);
         // deposit
         IERC20(_erc20).transferFrom(msg.sender, address(this), _depositAmount);
         // open wave
@@ -133,6 +135,10 @@ contract HackathonContract is Ownable, WhitelistedERC20 {
 
     function getHackathon(string memory _hackathonId) public view returns (Hackathon memory) {
         return _hackathons[_hackathonId];
+    }
+
+    function getHackathons() public view returns (string[] memory) {
+        return hackathonIds;
     }
 
     function getSubmitProducts(string memory _hackathonId, uint256 index) public view returns (address[] memory) {
