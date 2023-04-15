@@ -3,7 +3,7 @@ const {ethers} = require("hardhat");
 async function main(address) {
     const Hackathon = await ethers.getContractFactory("HackathonContract");
     if (!address) {
-        address = '0x07865c6e87b9f70255377e024ace6630c1eaa37f';
+        address = '0x07865c6e87b9f70255377e024ace6630c1eaa37f'; // goerli USDC
     }
     const hackathon = await Hackathon.deploy([address]);
 
