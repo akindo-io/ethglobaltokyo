@@ -73,9 +73,11 @@ contract HackathonContract is Ownable, WhitelistedERC20 {
         require(hackathon.safeAddress == msg.sender);
         require(_isOpenedWave(_hackathonId));
         require(wave.submissionDeadline < block.timestamp);
-        require(wave.votingDeadline < block.timestamp);
         require(_votes.length == wave.submitAddresses.length);
 
+        if (hackathon.safeAddress != msg.sender) {
+            return;
+        }
         // transfer
         uint256 totalVotes = sumVotes(_votes);
         require(totalVotes > 0, "Total votes should be greater than 0.");
