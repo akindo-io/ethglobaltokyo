@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./WhitelistedERC20.sol";
 
-contract Hackathon is Ownable, WhitelistedERC20 {
+contract HackathonContract is Ownable, WhitelistedERC20 {
 
     using SafeERC20 for IERC20;
 
@@ -19,6 +19,7 @@ contract Hackathon is Ownable, WhitelistedERC20 {
         uint256 waveSubmitTime;
         uint256 waveVoteTime;
         string hackathonId;
+        string snapshotSpace;
     }
 
     mapping(string => Wave[]) private waves;
