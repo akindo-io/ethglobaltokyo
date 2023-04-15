@@ -1,14 +1,18 @@
 const {ethers} = require("hardhat");
 
-async function main() {
-    const Hackathon = await ethers.getContractFactory("Hackathon");
-    const hackathon = await Hackathon.deploy('0x07865c6e87b9f70255377e024ace6630c1eaa37f');
+async function main(address) {
+    const Hackathon = await ethers.getContractFactory("HackathonContract");
+    if (!address) {
+        address = '0x07865c6e87b9f70255377e024ace6630c1eaa37f';
+    }
+    const hackathon = await Hackathon.deploy([address]);
 
     // コントラクトのデプロイ
     await hackathon.deployed();
 
     // コントラクトのアドレスを表示
     console.log("Hackathon deployed to:", hackathon.address);
+    return hackathon.address;
 }
 
 if (require.main === module) {

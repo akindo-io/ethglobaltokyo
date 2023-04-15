@@ -48,11 +48,12 @@ contract HackathonContract is Ownable, WhitelistedERC20 {
         }
     }
 
-    function open(address _erc20, uint256 _wavePrize, uint256 _depositAmount, uint256 _waveSubmitTime, uint256 _waveVoteTime, string memory _hackathonId) external {
+    function open(address _erc20, address safeAddress, uint256 _wavePrize, uint256 _depositAmount, uint256 _waveSubmitTime, uint256 _waveVoteTime, string memory _hackathonId) external {
         Hackathon storage hackathon = _hackathons[_hackathonId];
         require(whitelisted(_erc20), "Token not whitelisted");
 
         hackathon.from = msg.sender;
+        hackathon.safeAddress = safeAddress;
         hackathon.depositAmount = _depositAmount;
         hackathon.erc20 = _erc20;
         hackathon.hackathonId = _hackathonId;
@@ -96,9 +97,6 @@ contract HackathonContract is Ownable, WhitelistedERC20 {
         Hackathon storage hackathon = _hackathons[_hackathonId];
 
         if (hackathon.wavePrize < hackathon.depositAmount) {
-            Wave storage wave = waves[_hackathonId][waveCount[_hackathonId] - 1];
-            wave.status = WaveStatus.Closed;
-        } else {
             Wave memory wave;
             wave.hackathonId = _hackathonId;
             wave.status = WaveStatus.Opening;
@@ -124,23 +122,31 @@ contract HackathonContract is Ownable, WhitelistedERC20 {
     }
 
     function getWave(string memory _hackathonId) public view returns (Wave memory) {
-        return waves[_hackathonId][waves[_hackathonId].length];
+        return waves[_hackathonId][waveCount[_hackathonId] - 1];
+    }
+
+    function getWaves(string memory _hackathonId) public view returns (Wave[] memory) {
+        return waves[_hackathonId];
     }
 
     function getHackathon(string memory _hackathonId) public view returns (Hackathon memory) {
         return _hackathons[_hackathonId];
     }
 
+    function getSubmitProducts(string memory _hackathonId, uint256 index) public view returns (address[] memory) {
+        return waves[_hackathonId][index].submitAddresses;
+    }
+
 
     function _isOpenedWave(string memory _hackathonId) private view returns (bool)
     {
-        Wave memory wave = waves[_hackathonId][waves[_hackathonId].length];
+        Wave memory wave = waves[_hackathonId][waveCount[_hackathonId] - 1];
         return wave.status == WaveStatus.Opening;
     }
 
     function _isClosedWave(string memory _hackathonId) private view returns (bool)
     {
-        Wave memory wave = waves[_hackathonId][waves[_hackathonId].length];
+        Wave memory wave = waves[_hackathonId][waveCount[_hackathonId] - 1];
         return wave.status == WaveStatus.Closed;
     }
 
