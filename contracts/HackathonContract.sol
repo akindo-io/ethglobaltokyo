@@ -81,13 +81,13 @@ contract HackathonContract is Ownable, WhitelistedERC20 {
         require(totalVotes > 0, "Total votes should be greater than 0.");
 
         for (uint256 i = 0; i < wave.submitAddresses.length; i++) {
-            uint256 votePercentage = (_votes[i] * 100) / totalVotes;
-            uint256 reward = (hackathon.wavePrize * votePercentage) / 100;
+            uint256 reward = ((hackathon.wavePrize * _votes[i] * 100) / totalVotes) / 100;
             IERC20(hackathon.erc20).safeTransfer(wave.submitAddresses[i], reward);
             hackathon.depositAmount -= reward;
         }
 
         wave.status = WaveStatus.Closed;
+        wave.votes = _votes;
         // open wave
         _addWave(_hackathonId);
     }

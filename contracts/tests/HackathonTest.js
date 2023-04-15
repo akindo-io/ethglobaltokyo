@@ -70,7 +70,13 @@ describe('HackathonTest', async function () {
         let waves = await hackathonContract.getWaves(hackathonId);
         expect(waves.length).equal(2);
         expect(waves[0].status).equal(status.Closed);
+        expect(waves[0].votes.length).equal(2);
+        expect(waves[0].votes[0]).equal(60);
+        expect(waves[0].votes[1]).equal(40);
         expect(waves[1].status).equal(status.Opening);
+
+        let hackathon = await hackathonContract.getHackathon(hackathonId);
+        expect(hackathon.depositAmount).equal(990);
 
         await ethers.provider.send("evm_increaseTime", [-1800]);
         await ethers.provider.send("evm_mine", []);
